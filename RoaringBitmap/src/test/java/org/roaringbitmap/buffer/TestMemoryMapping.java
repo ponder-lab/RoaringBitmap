@@ -380,7 +380,7 @@ public class TestMemoryMapping {
     final CountDownLatch ready = new CountDownLatch(numThreads);
     final CountDownLatch finished = new CountDownLatch(numThreads);
 
-    ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+    ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     for (int i = 0; i < numThreads; i++) {
       final int ti = i;
