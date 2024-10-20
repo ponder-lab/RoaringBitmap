@@ -33,7 +33,7 @@ subprojects {
             options.isDeprecation = true
             options.isWarnings = true
             options.compilerArgs = listOf("-Xlint:unchecked")
-            options.release.set(8)
+            options.release.set(21)
         }
 
         withType<Javadoc> {
