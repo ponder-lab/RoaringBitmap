@@ -32,7 +32,7 @@ tasks.named<Jar>("sourcesJar") {
 // Unset Java 8 release applied from root project to allow modularity plugin to
 // control the class file versions.
 tasks.named<JavaCompile>("compileJava") {
-    options.release.set(null as Int?)
+    options.release.set(21)
 }
 
 configure<org.javamodularity.moduleplugin.extensions.ModularityExtension> {
@@ -42,7 +42,7 @@ configure<org.javamodularity.moduleplugin.extensions.ModularityExtension> {
 // Unset Java 8 release applied from root project to allow modularity plugin to
 // control the class file versions.
 tasks.named<JavaCompile>("compileModuleInfoJava") {
-    options.release.set(null as Int?)
+    options.release.set(21)
 }
 
 tasks.test {
