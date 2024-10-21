@@ -23,6 +23,20 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.Warmup;
+
 
 class ByteBufferBackedInputStream extends InputStream {
 
@@ -99,7 +113,11 @@ class ByteBufferBackedOutputStream extends OutputStream {
 
 
 @SuppressWarnings({"static-method"})
+@State(Scope.Benchmark)
 public class TestMemoryMapping {
+
+  @Param({"10", "50", "100", "500", "1000", "5000"})
+  int numThreads;
 
   static ArrayList<ImmutableRoaringBitmap> mappedbitmaps = new ArrayList<ImmutableRoaringBitmap>();
 
@@ -110,6 +128,7 @@ public class TestMemoryMapping {
   static File tmpfile;
 
   @AfterAll
+  @TearDown(Level.Trial)
   public static void clearFiles() {
     System.out.println("[TestMemoryMapping] Cleaning memory-mapped file.");
     out = null;
@@ -131,6 +150,7 @@ public class TestMemoryMapping {
   }
 
   @BeforeAll
+  @Setup(Level.Trial)
   public static void initFiles() throws IOException {
     System.out.println("[TestMemoryMapping] Setting up memory-mapped file. (Can take some time.)");
     final ArrayList<Long> offsets = new ArrayList<Long>();
@@ -358,11 +378,11 @@ public class TestMemoryMapping {
   }
 
   @Test
+  @Benchmark
   public void multithreadingTest() throws InterruptedException, IOException {
     System.out.println("[TestMemoryMapping] multithreading test");
     final MutableRoaringBitmap rr1 = new MutableRoaringBitmap();
 
-    final int numThreads = Runtime.getRuntime().availableProcessors();
     final Throwable[] errors = new Throwable[numThreads];
 
     for (int i = 0; i < numThreads; i++) {
