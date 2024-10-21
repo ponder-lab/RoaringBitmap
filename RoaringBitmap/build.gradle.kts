@@ -1,3 +1,8 @@
+plugins {
+    id("me.champeau.gradle.jmh") version "0.5.0"
+    id("com.github.johnrengelman.shadow") version "6.0.0"
+}
+
 buildscript {
   repositories {
     maven {
@@ -57,15 +62,19 @@ tasks.compileTestJava {
 val deps: Map<String, String> by extra
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${deps["jupiter"]}")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:${deps["jupiter"]}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${deps["jupiter"]}")
-    testImplementation("com.google.guava:guava:${deps["guava"]}")
-    testImplementation("org.apache.commons:commons-lang3:${deps["commons-lang"]}")
-    testImplementation("com.esotericsoftware:kryo:5.0.0-RC6")
-    testImplementation("com.fasterxml.jackson.core", "jackson-databind", "2.10.3")
-    testImplementation("org.assertj", "assertj-core", "3.23.1")
-    testImplementation("org.openjdk.jol", "jol-core", "0.16")
+    implementation("org.junit.jupiter:junit-jupiter-api:${deps["jupiter"]}")
+    implementation("org.junit.jupiter:junit-jupiter-params:${deps["jupiter"]}")
+    runtimeOnly("org.junit.jupiter:junit-jupiter-engine:${deps["jupiter"]}")
+    implementation("org.openjdk.jmh:jmh-core:1.35")
+    annotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.35")
+    implementation("com.google.guava:guava:${deps["guava"]}")
+    implementation("org.apache.commons:commons-lang3:${deps["commons-lang"]}")
+    implementation("com.esotericsoftware:kryo:5.0.0-RC6")
+    implementation("com.fasterxml.jackson.core", "jackson-databind", "2.10.3")
+    implementation("org.assertj:assertj-core:3.23.1")
+    implementation("org.openjdk.jol:jol-core:0.16")
+    jmhImplementation("org.junit.jupiter:junit-jupiter-api:${deps["jupiter"]}")
+    jmhRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${deps["jupiter"]}")
 }
 
 sourceSets {
@@ -114,4 +123,37 @@ tasks.test {
         // Helps investigating OOM. But too verbose to be activated by default
         // showStandardStreams = true
     }
+}
+
+jmh {
+    sourceSets {
+        getByName("main") {
+            java.srcDir("src/test/java")
+        }
+    }
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveClassifier.set("all")
+
+    from(sourceSets["main"].output)
+    from(sourceSets["test"].output)
+
+    manifest {
+        attributes(
+            "Main-Class" to "org.openjdk.jmh.Main"
+        )
+    }
+
+    configurations = listOf(project.configurations.getByName("runtimeClasspath"))
+}
+
+tasks.register<JavaExec>("runJmhShadow") {
+    group = "benchmark"
+    description = "Runs JMH benchmarks from the shadow JAR."
+
+    classpath = files(tasks.named("shadowJar"))
+
+    mainClass.set("org.openjdk.jmh.Main")
+    jvmArgs = listOf("-Xms2G", "-Xmx2G")
 }
