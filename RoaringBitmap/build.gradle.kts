@@ -156,4 +156,12 @@ tasks.register<JavaExec>("runJmhShadow") {
 
     mainClass.set("org.openjdk.jmh.Main")
     jvmArgs = listOf("-Xms2G", "-Xmx2G")
+    
+    val outputFile = "build/jmh-output.txt"
+    val resultFile = "build/jmh-result.csv"
+
+    args = listOf(
+        "-o", outputFile,
+        "-rff", resultFile
+    )
 }
